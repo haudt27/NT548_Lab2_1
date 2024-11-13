@@ -51,17 +51,21 @@ jobs:
 
       # Step 7: Initialize Terraform
       - name: Terraform Init
+        working-directory: Lab1-Terraform
         run: terraform init
 
       # Step 8: Validate Terraform files
       - name: Terraform Validate
+        working-directory: Lab1-Terraform
         run: terraform validate
 
       # Step 9: Plan Terraform deployment with tfvars file
       - name: Terraform Plan
-        run: terraform plan -var-file="Lab1-Terraform/terraform.tfvars" -out=tfplan
+        working-directory: Lab1-Terraform
+        run: terraform plan -var-file="terraform.tfvars" -out=tfplan
 
       # Step 10: Apply Terraform deployment with tfvars file
       - name: Terraform Apply
+        working-directory: Lab1-Terraform
         if: ${{ github.ref == 'refs/heads/main' }}
         run: terraform apply -var-file="terraform.tfvars" 
