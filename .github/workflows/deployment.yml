@@ -1,0 +1,84 @@
+name: Terraform Deployment Workflow 
+
+on:
+  workflow_dispatch: # manual trigger
+
+jobs:
+  # Job deploy 
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Update system and install dependencies
+      - name: Update system and install latest dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python3-pip
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update
+          sudo rm -rf awscliv2.zip aws
+
+      # Step 3: Set up AWS credentials using GitHub Secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      # Step 4: Set up the latest Terraform CLI
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      # Step 5: Install the latest version of Checkov
+      - name: Install Checkov
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install --upgrade checkov
+
+      # Step 6: Run Checkov to scan Terraform code for security issues
+      - name: Run Checkov scan
+        run: checkov -d .
+        continue-on-error: true
+
+      # Step 7: Initialize Terraform
+      - name: Terraform Init
+        working-directory: Lab1-Terraform
+        run: terraform init
+
+      # Step 8: Validate Terraform files
+      - name: Terraform Validate
+        working-directory: Lab1-Terraform
+        run: terraform validate
+
+      # Step 9: Check Terraform formatting
+      - name: Terraform Format Check
+        working-directory: Lab1-Terraform
+        run: terraform fmt -check -recursive || echo "Formatting issues detected, please fix."
+        continue-on-error: true
+
+      # Step 10: Plan Terraform deployment with tfvars file
+      - name: Terraform Plan
+        working-directory: Lab1-Terraform
+        run: terraform plan -var-file="terraform.tfvars" -out=tfplan
+
+      # Step 11: Upload Terraform Plan for debugging
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan
+          path: Lab1-Terraform/tfplan
+
+      # Step 12: Apply Terraform deployment with tfvars file
+      - name: Terraform Apply
+        working-directory: Lab1-Terraform
+        run: terraform apply -auto-approve tfplan
+
+  
