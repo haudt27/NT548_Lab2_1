@@ -71,7 +71,7 @@ jobs:
 
       # Step 11: Upload Terraform Plan for debugging
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: terraform-plan
           path: Lab1-Terraform/tfplan
