@@ -2,6 +2,15 @@ provider "aws" {
   region = var.region
 }
 
+terraform {
+  backend "s3" {
+	bucket     	= "haudt-tfstate-bucket"
+	key        	= "TerraformState/mystate.tfstate"
+	region     	= "ap-southeast-1"
+	dynamodb_table = "my-tfstate-table"
+  }
+}
+
 #Create a complete VPC using module networking
 module "networking" {
   source              = "./modules/networking"
