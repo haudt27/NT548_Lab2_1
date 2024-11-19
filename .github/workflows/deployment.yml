@@ -4,7 +4,7 @@ on:
   push: # manual trigger
 
 jobs:
-  # Job deploy 
+  # Job deployment
   deploy:
     runs-on: ubuntu-latest
 
